@@ -1,0 +1,17 @@
+{
+  "name": "obsidian-to-astro",
+  "version": "0.0.1",
+  "description": "This is a script to convert Obsidian notes to Astro docs (Starlight theme)",
+  "main": "main.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prathwik0/obsidian-to-astro-converter"
+  },
+  "author": "Prathwik Kushal Kumar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/prathwik0/obsidian-to-astro-converter/issues"
+  },
+  "homepage": "https://github.com/prathwik0/obsidian-to-astro-converter/README.md"
+}
