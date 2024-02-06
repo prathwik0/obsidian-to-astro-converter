@@ -9,10 +9,14 @@ import {
   writeFileSync,
   copyFileSync,
 } from "fs";
-import { join, extname, relative, basename } from "path";
 
-const sourceDirectory = "";
-const destinationDirectory = "";
+import { join, extname, relative, basename, dirname } from "path";
+import "dotenv/config";
+
+const SOURCE_DIR = process.env.SOURCE_DIR;
+const DEST_DIR = process.env.DEST_DIR;
+const PUBLIC_DIR = process.env.PUBLIC_DIR;
+const IGNORE = process.env.IGNORE;
 
 const astroConvert = (src, dest) => {
   if (!existsSync(dest)) {
@@ -24,23 +28,23 @@ const astroConvert = (src, dest) => {
   files.forEach((file) => {
     const srcPath = join(src, file);
     const destPath = join(dest, file);
-
     const stats = statSync(srcPath);
 
     if (stats.isDirectory()) {
-      if (basename(srcPath) === "assets") {
-        const relativePath = relative(sourceDirectory, src);
-        const publicDir = join(destinationDirectory, "public", relativePath);
+      if (basename(srcPath) === ".obsidian" || basename(srcPath) === IGNORE) {
+        return;
+      } else if (basename(srcPath) === "assets") {
+        /* all items in assets folder are moved to public folder while retaining folder structure */
+        const relativePath = relative(SOURCE_DIR, src);
+        const publicDir = join(PUBLIC_DIR, relativePath);
         astroConvert(srcPath, publicDir);
       } else {
         astroConvert(srcPath, destPath);
       }
+    } else if (extname(file) === ".md") {
+      modifyMarkdownFile(srcPath, destPath);
     } else {
-      if (extname(file) === ".md") {
-        modifyMarkdownFile(srcPath, destPath);
-      } else {
-        copyFileSync(srcPath, destPath);
-      }
+      copyFileSync(srcPath, destPath);
     }
   });
 };
@@ -52,6 +56,8 @@ function modifyMarkdownFile(srcPath, destPath) {
       return;
     }
 
+    const relativePath = relative(SOURCE_DIR, dirname(srcPath));
+
     const rules = [
       {
         name: "images",
@@ -61,10 +67,11 @@ function modifyMarkdownFile(srcPath, destPath) {
       {
         name: "assets",
         regex: /\((assets\/[^)]+)\)/g,
-        replace: (match, p1) => `(/nndl/${p1.replace("assets/", "")})`,
+        replace: (match, p1) =>
+          `(/${relativePath}${p1.replace("assets/", "")})`,
       },
       {
-        name: "mdFiles",
+        name: "md-links",
         regex: /\(([^)]+\.md)\)/g,
         replace: (match, p1) => `(../${p1.replace(".md", "")})`,
       },
@@ -88,5 +95,5 @@ function modifyMarkdownFile(srcPath, destPath) {
   });
 }
 
-astroConvert(sourceDirectory, destinationDirectory);
+astroConvert(SOURCE_DIR, DEST_DIR);
 console.log("Files copied, restructured, and modified successfully.");
